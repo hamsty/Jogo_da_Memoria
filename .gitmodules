@@ -1,0 +1,6 @@
+[submodule "lib/Led_Table_NxN"]
+	path = lib/Led_Table_NxN
+	url = https://github.com/hamsty/Led_Table_NxN
+[submodule "lib/gamesirg3sble"]
+	path = lib/gamesirg3sble
+	url = https://github.com/hamsty/gamesirg3sble
