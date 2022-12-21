@@ -34,9 +34,9 @@ static int dificuldade = 0;
 static int antiga = -1;
 
 static LedTableNxN display(NUM_LEDS, MESA, NEO_GRB + NEO_KHZ800);
-static pair<int, int> foco = {0, 0};
-static pair<int, int> escolha1 = {-1, -1};
-static pair<int, int> escolhaAnterior = {-1, -1};
+static pair<int, int> foco;
+static pair<int, int> escolha1;
+static pair<int, int> escolhaAnterior;
 static set<pair<int, int>> ganhos;
 static uint16_t *vetor;
 
@@ -109,10 +109,14 @@ void setup()
   Serial.println("Joystick Achado!");
 }
 
-void layerJogo()
+void initJogo()
 {
+  escolha1 = {-1, -1};
+  ganhos.clear();
+  foco = {0, 0};
+  escolhaAnterior = {-1, -1};
+  antiga = -1;
   int tamanhoP = DIF(dificuldade);
-  int tamanhoL = 12 / tamanhoP;
   int n = tamanhoP * tamanhoP / 2;
   uint16_t cores[19] = {0x3AF1, 0xDD57, 0xB4EB, 0x5002, 0x6975, 0xE760, 0x435C, 0xB434, 0x8004, 0xFDE0, 0xCAA0, 0x0539, 0x6C47, 0x0184, 0xC972, 0x3FE2, 0x80EF, 0x03FF, 0x440D};
   vector<int> escolhida;
@@ -137,15 +141,31 @@ void layerJogo()
     for (uint16_t j = 0; j < tamanhoP; j++)
     {
       vetor[i * tamanhoP + j] = cores[*escolhida.rbegin()];
-      (*vetor += (i * tamanhoP + j)) = cores[*escolhida.rbegin()];
       escolhida.pop_back();
     }
   }
+}
+
+void layerJogo()
+{
+  int tamanhoP = DIF(dificuldade);
+  int tamanhoL = 12 / tamanhoP;
+  display.fillScreen(0X00);
   for (int i = 0; i < tamanhoP; i++)
   {
     for (int j = 0; j < tamanhoP; j++)
     {
-      display.fillRect(i * tamanhoL, j * tamanhoL, tamanhoL, tamanhoL, vetor[i * tamanhoL + j]);
+      uint16_t cor = 0x4208;
+      if (foco == pair<int, int>(i, j))
+      {
+        cor = 0xFFFF;
+      }
+      if (escolha1 == pair<int, int>(i, j))
+        cor = vetor[i * tamanhoP + j];
+      if (ganhos.count(pair<int, int>(i, j)) > 0)
+        if (foco != pair<int, int>(i, j))
+          cor = 0x0000;
+      display.fillRect(i * tamanhoL, j * tamanhoL, tamanhoL, tamanhoL, cor);
     }
   }
 }
@@ -175,17 +195,14 @@ void escolhaQuadrado()
   pair<int, int> xy = client->getXY();
   int x = xy.first;
   int y = xy.second;
-  escolhaAnterior = foco;
-  pair<int, int> foco = {(foco.first + x) > tamanhoP - 1 ? 0 : ((foco.first + x < 0) ? tamanhoP - 1 : foco.first + x),
-                         (foco.second + y) > tamanhoP - 1 ? 0 : ((foco.second + y < 0) ? tamanhoP - 1 : foco.second + y)};
-  Serial.printf("foco(%d %d)\n", foco.first, foco.second);
+  foco = {(foco.first + x) > tamanhoP - 1 ? 0 : ((foco.first + x < 0) ? tamanhoP - 1 : foco.first + x),
+          (foco.second + y) > tamanhoP - 1 ? 0 : ((foco.second + y < 0) ? tamanhoP - 1 : foco.second + y)};
 
-  // if (escolhaAnterior != foco)
-  // {
-  //   if (escolha1 == pair<int, int>(-1, -1))
-  //     display.fillRect(escolhaAnterior.first * tamanhoL, escolhaAnterior.second * tamanhoL, tamanhoL, tamanhoL, 0x4208);
-  //   display.fillRect(foco.first * tamanhoL, foco.second * tamanhoL, tamanhoL, tamanhoL, 0xFFFF);
-  // }
+  if (escolhaAnterior != foco)
+  {
+    layerJogo();
+  }
+  escolhaAnterior = foco;
   if (client->aPressed())
   {
     if (ganhos.count(foco) == 0)
@@ -203,19 +220,13 @@ void escolhaQuadrado()
           {
             ganhos.insert(escolha1);
             ganhos.insert(foco);
-            display.fillRect(foco.first * tamanhoL, foco.second * tamanhoL, tamanhoL, tamanhoL, 0x00);
-            display.fillRect(escolha1.first * tamanhoL, escolha1.second * tamanhoL, tamanhoL, tamanhoL, 0x00);
-          }
-          else
-          {
-            display.fillRect(foco.first * tamanhoL, foco.second * tamanhoL, tamanhoL, tamanhoL, 0xFFFF);
           }
         }
         escolha1 = {-1, -1};
       }
     }
   }
-  if (ganhos.size() == tamanhoL * tamanhoL)
+  if (ganhos.size() == tamanhoP * tamanhoP)
   {
     jogoTerminado = true;
     layerWin();
@@ -225,8 +236,6 @@ void escolhaQuadrado()
     if (escolha1 != pair<int, int>(-1, -1))
     {
       escolha1 = {-1, -1};
-      display.fillScreen(0x4208);
-      display.fillRect(foco.first * tamanhoL, foco.second * tamanhoL, tamanhoL, tamanhoL, vetor[foco.first * tamanhoP + foco.second]);
     }
     else
     {
@@ -237,7 +246,6 @@ void escolhaQuadrado()
 
 void escolheDificuldade()
 {
-  antiga = dificuldade;
   pair<int, int> xy = client->getXY();
   int y = xy.second;
   dificuldade = (dificuldade + y) > 1 ? 0 : ((dificuldade + y < 0) ? 1 : dificuldade + y);
@@ -245,9 +253,10 @@ void escolheDificuldade()
   {
     layerEscolhas();
   }
+  antiga = dificuldade;
   if (client->aPressed())
   {
-    layerJogo();
+    initJogo();
     dificuldadeEscolhida = true;
   }
 }
