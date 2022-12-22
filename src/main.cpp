@@ -1,8 +1,10 @@
 #include <Arduino.h>
+#if MESA == 0
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
 #include <AsyncTCP.h>
+#endif
 #include <ESPAsyncWebServer.h>
 #include <Adafruit_NeoPixel.h>
 #include <SPIFFS.h>
@@ -11,7 +13,6 @@
 #include <LedTableNxN.h>
 #include <vector>
 #include <set>
-#include <cstdlib>
 
 using namespace std;
 
@@ -70,16 +71,18 @@ void setup()
 {
   Serial.begin(115600);
   WiFi.begin(casa, senha);
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    delay(500);
-    Serial.print(".");
-  }
   if (!SPIFFS.begin(true))
   {
     Serial.println("SPIFFS Mount Failed");
     return;
   }
+  #if MESA==0
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    Serial.print(".");
+  }
+  
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
             { request->send(SPIFFS, "/index.html", "text/html", false); });
   server.on("/mesa.js", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -102,6 +105,7 @@ void setup()
   Serial.println("Servidor Iniciado");
   Serial.print("Acessa em casa http://");
   Serial.println(WiFi.localIP());
+  #endif
   client = new JoystickClient();
   while (!client->isFind())
   {
@@ -298,7 +302,9 @@ void loop()
         }
       }
     }
-    // display.show();
+    #if MESA == 1
+    display.show();
+    #endif
     delay(GAME_VELOCITY);
   }
 }
