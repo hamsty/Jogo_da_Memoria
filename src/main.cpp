@@ -24,7 +24,9 @@ using namespace std;
 const char *casa = "Talles";
 const char *senha = "talles12345";
 
+#if MESA == 0
 static AsyncWebServer server(80);
+#endif
 
 static JoystickClient *client;
 
