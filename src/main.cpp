@@ -71,13 +71,13 @@ void drawImage(int16_t x, int16_t y, String file)
 void setup()
 {
   Serial.begin(115600);
-  WiFi.begin(casa, senha);
   if (!SPIFFS.begin(true))
   {
     Serial.println("SPIFFS Mount Failed");
     return;
   }
   #if MESA==0
+  WiFi.begin(casa, senha);
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
