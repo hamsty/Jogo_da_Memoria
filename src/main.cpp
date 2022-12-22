@@ -17,7 +17,7 @@
 using namespace std;
 
 #define NUM_LEDS 12
-#define MESA 15
+#define DATAPIN 15
 #define GAME_VELOCITY 100
 #define DIF [](int a) { return (a == 1 ? 6 : 2); }
 
@@ -35,7 +35,7 @@ static bool jogoTerminado = false;
 static int dificuldade = 0;
 static int antiga = -1;
 
-static LedTableNxN display(NUM_LEDS, MESA, NEO_GRB + NEO_KHZ800);
+static LedTableNxN display(NUM_LEDS, DATAPIN, NEO_GRB + NEO_KHZ800);
 static pair<int, int> foco;
 static pair<int, int> escolha1;
 static pair<int, int> escolhaAnterior;
