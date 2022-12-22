@@ -4,8 +4,8 @@
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
 #include <AsyncTCP.h>
-#endif
 #include <ESPAsyncWebServer.h>
+#endif
 #include <Adafruit_NeoPixel.h>
 #include <SPIFFS.h>
 #include <FS.h>
@@ -21,10 +21,9 @@ using namespace std;
 #define GAME_VELOCITY 100
 #define DIF [](int a) { return (a == 1 ? 6 : 2); }
 
+#if MESA == 0
 const char *casa = "Talles";
 const char *senha = "talles12345";
-
-#if MESA == 0
 static AsyncWebServer server(80);
 #endif
 
